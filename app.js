@@ -2,19 +2,17 @@
 let userScore = 0;
 let compScore = 0;
 let currentMode = "computer";
-
 let playerTurn = 1;
 let player1Choice = "";
 let player2Choice = "";
 
-
-const choices = document.querySelectorAll(".choice");
+const choicesElements = document.querySelectorAll(".choice");
+const container = document.querySelector("#container");
 const msg = document.querySelector("#msg");
 const user_score = document.querySelector("#user-score");
 const comp_score = document.querySelector("#comp-score");
 const player1Name = document.querySelector("#player1-name");
 const player2Name = document.querySelector("#player2-name");
-
 
 function startGame(mode) {
     currentMode = mode;
@@ -25,12 +23,45 @@ function startGame(mode) {
     if (mode === "computer") {
         player1Name.textContent = "You";
         player2Name.textContent = "Computer";
+        showImages(true);
     } else {
         player1Name.textContent = "Player 1";
         player2Name.textContent = "Player 2";
+        prepareHiddenTurn();
     }
 }
 
+
+function shuffleChoices() {
+    const elementsArray = Array.from(choicesElements);
+    for (let i = elementsArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        container.appendChild(elementsArray[j]);
+    }
+}
+
+
+function showImages(show) {
+    choicesElements.forEach(choice => {
+        const img = choice.querySelector("img");
+        const text = choice.querySelector(".choice-text");
+        if (show) {
+            img.style.display = "block";
+            text.style.display = "none";
+            choice.style.background = "";
+        } else {
+            img.style.display = "none";
+            text.style.display = "block";
+            choice.style.background = "#eab308";
+        }
+    });
+}
+
+function prepareHiddenTurn() {
+    showImages(false);
+    shuffleChoices();
+    msg.textContent = `Please You  choose your hidden move!`;
+}
 
 function resetGame() {
     userScore = 0;
@@ -41,101 +72,38 @@ function resetGame() {
     msg.style.background = "#081b31";
     msg.style.color = "white";
     playerTurn = 1;
-
-    // Enable choices
-    choices.forEach(choice => choice.style.pointerEvents = "auto");
+    enableChoices();
+    if (currentMode === "2") prepareHiddenTurn();
+    else showImages(true);
 }
 
-// Back to Menu
 function backToMenu() {
     document.getElementById("game").style.display = "none";
     document.getElementById("menu").style.display = "block";
-    resetGame();
 }
 
-// Generate Computer Choice
 function genCompChoice() {
     const options = ["rock", "paper", "scissors"];
-    const randIdx = Math.floor(Math.random() * 3);
-    return options[randIdx];
+    return options[Math.floor(Math.random() * 3)];
 }
 
-// Check  Winner
-function checkMatchWinner() {
-    if (userScore === 5) {
-        msg.innerHTML = currentMode === "computer"
-            ? "🎉 Congratulations!  You Won the Match! Please reset or start a new game."
-            : "🎉 Congratulations! You Won the Match! Please reset or start a new game.";
-        msg.style.background = "gold";
-        msg.style.color = "black";
-        disableChoices();
-    } else if (compScore === 5) {
-        msg.innerHTML = currentMode === "computer"
-            ? "😢 Computer Won the Match! Please reset or start a new game."
-            : "🎉 Player 2 Won the Match! Please reset or start a new game.";
-        msg.style.background = "black";
-        msg.style.color = "white";
-        disableChoices();
-    }
-}
-
-
-function disableChoices() {
-    choices.forEach(choice => choice.style.pointerEvents = "none");
-}
-
-// Play vs Computer
-function playGame(userChoice) {
-    const comChoice = genCompChoice();
-
-    if (userChoice === comChoice) {
-        msg.textContent = "It's a Draw! Play again.";
-        msg.style.background = "#081b31";
-    } else {
-        let userWin = false;
-
-        if (
-            (userChoice === "rock" && comChoice === "scissors") ||
-            (userChoice === "paper" && comChoice === "rock") ||
-            (userChoice === "scissors" && comChoice === "paper")
-        ) {
-            userWin = true;
-        }
-
-        if (userWin) {
-            userScore++;
-            user_score.textContent = userScore;
-            msg.textContent = `You Win! ${userChoice} beats ${comChoice}`;
-            msg.style.background = "green";
-        } else {
-            compScore++;
-            comp_score.textContent = compScore;
-            msg.textContent = `You Lose! ${comChoice} beats ${userChoice}`;
-            msg.style.background = "red";
-        }
-    }
-
-    checkMatchWinner();
-}
-
-
-function playTwoPlayer(choice) {
+function playTwoPlayer(choiceId) {
     if (playerTurn === 1) {
-        player1Choice = choice;
-        msg.textContent = "You selected. Player 2's turn!";
-        msg.style.background = "#081b31";
+        player1Choice = choiceId;
         playerTurn = 2;
+        prepareHiddenTurn(); // Shuffle again for Player 2
+        msg.textContent = "Player 1 selected! Now Player 2's turn.";
     } else {
-        player2Choice = choice;
+        player2Choice = choiceId;
+        showImages(true); // Reveal everything
         checkWinnerTwoPlayer(player1Choice, player2Choice);
         playerTurn = 1;
     }
 }
 
-
 function checkWinnerTwoPlayer(p1, p2) {
     if (p1 === p2) {
-        msg.textContent = "It's a draw!";
+        msg.textContent = `Draw! Both chose ${p1}`;
         msg.style.background = "#081b31";
     } else if (
         (p1 === "rock" && p2 === "scissors") ||
@@ -144,27 +112,35 @@ function checkWinnerTwoPlayer(p1, p2) {
     ) {
         userScore++;
         user_score.textContent = userScore;
-        msg.textContent = `You wins! ${p1} beats ${p2}`;
+        msg.textContent = `Player 1 Wins! ${p1} beats ${p2}`;
         msg.style.background = "green";
     } else {
         compScore++;
         comp_score.textContent = compScore;
-        msg.textContent = `Player 2 wins! ${p2} beats ${p1}`;
+        msg.textContent = `Player 2 Wins! ${p2} beats ${p1}`;
         msg.style.background = "red";
     }
 
-    checkMatchWinner();
+    // Briefly wait before hiding again for the next round
+    setTimeout(() => {
+        if (userScore < 5 && compScore < 5) prepareHiddenTurn();
+        checkMatchWinner();
+    }, 2000);
 }
 
 
-choices.forEach(choice => {
+
+choicesElements.forEach(choice => {
     choice.addEventListener("click", () => {
         const selected = choice.id;
-
         if (currentMode === "computer") {
             playGame(selected);
-        } else if (currentMode === "2") {
+        } else {
             playTwoPlayer(selected);
         }
     });
 });
+
+function enableChoices() {
+    choicesElements.forEach(choice => choice.style.pointerEvents = "auto");
+}
