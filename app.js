@@ -7,7 +7,7 @@ let player1Choice = "";
 let player2Choice = "";
 
 const choices = document.querySelectorAll(".choice");
-const container = document.querySelector("#container"); 
+const container = document.querySelector("#container");
 const msg = document.querySelector("#msg");
 const user_score = document.querySelector("#user-score");
 const comp_score = document.querySelector("#comp-score");
@@ -28,14 +28,17 @@ function setVisibility(hide) {
     choices.forEach(choice => {
         const img = choice.querySelector("img");
         const text = choice.querySelector(".choice-text");
+
         if (hide) {
             img.style.opacity = "0";
             if (text) text.style.display = "block";
         } else {
             img.style.opacity = "1"; // Show image
             if (text) text.style.display = "none";
+
         }
     });
+
 }
 
 
@@ -44,16 +47,19 @@ function startGame(mode) {
     currentMode = mode;
     document.getElementById("menu").style.display = "none";
     document.getElementById("game").style.display = "block";
-    resetGame();
 
-    if (mode === "computer") {
+    if ("mode" == 'computer') {
         player1Name.textContent = "You";
         player2Name.textContent = "Computer";
-        setVisibility(false);
+        setVisibility(false); //show images for com mode
+        resetGame();
+    }
+    else {
         player1Name.textContent = "Player 1";
         player2Name.textContent = "Player 2";
-        setVisibility(true);
+        setVisibility(true);//hide img for 2 player
         shufflePositions();
+        resetGame();
     }
 }
 
